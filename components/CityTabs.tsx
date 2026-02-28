@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { CityData } from '@/lib/cities';
+import { stadiums as stadiumData } from '@/lib/stadiums';
 
 const tabs = [
   { id: 'story', label: 'The City' },
@@ -116,23 +117,101 @@ function StaySection({ city }: { city: CityData }) {
 }
 
 function MatchDaySection({ city }: { city: CityData }) {
+  const s = stadiumData[city.id];
+
   return (
     <div className="fade-in">
-      <div style={{ padding: '24px 0', borderBottom: '1px solid #f0f0f0' }}>
-        <p className="mono" style={{ fontSize: 10, letterSpacing: '.12em', color: '#bbb', marginBottom: 6 }}>VENUE</p>
-        <h3 className="display" style={{ fontSize: 28, fontWeight: 400, letterSpacing: '-0.02em' }}>{city.stadium.name}</h3>
-        <p className="body-text" style={{ marginTop: 8 }}>
-          Capacity {city.stadium.capacity}. {city.stadium.detail}
-        </p>
+      {/* Stadium header */}
+      <div style={{ padding: '0 0 28px', borderBottom: '1px solid #f0f0f0' }}>
+        <p className="mono" style={{ fontSize: 10, letterSpacing: '.12em', color: '#bbb', marginBottom: 8 }}>VENUE</p>
+        <h3 className="display" style={{ fontSize: 'clamp(26px,4vw,36px)', fontWeight: 400, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+          {s ? s.name : city.stadium.name}
+        </h3>
+        {s?.nameAr && <p style={{ fontSize: 16, color: '#ccc', marginTop: 4, direction: 'rtl' }}>{s.nameAr}</p>}
       </div>
+
+      {s ? (
+        <>
+          {/* Key stats grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0 28px', padding: '24px 0', borderBottom: '1px solid #f0f0f0' }}>
+            {[
+              { label: 'Capacity', value: s.capacity },
+              { label: 'Max round', value: s.maxRound },
+              { label: 'Distance', value: s.distFromCentre },
+              { label: 'Status', value: s.status.split('.')[0] },
+            ].map(stat => (
+              <div key={stat.label} style={{ padding: '8px 0' }}>
+                <p className="mono" style={{ fontSize: 9, letterSpacing: '.1em', color: '#bbb', marginBottom: 4 }}>{stat.label}</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a', lineHeight: 1.4 }}>{stat.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Map */}
+          <div style={{ margin: '28px 0', borderRadius: 4, overflow: 'hidden', border: '1px solid #f0f0f0' }}>
+            <iframe
+              src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${s.lat},${s.lng}&zoom=13&maptype=satellite`}
+              width="100%" height="300" style={{ border: 0, display: 'block' }}
+              allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div style={{ padding: '12px 16px', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <span style={{ fontSize: 12, color: '#888' }}>{s.lat.toFixed(4)}, {s.lng.toFixed(4)}</span>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}`}
+                target="_blank" rel="noopener noreferrer"
+                className="quiet-link" style={{ fontSize: 12 }}
+              >
+                Get directions →
+              </a>
+            </div>
+          </div>
+
+          {/* Capacity detail */}
+          <p className="body-text">{s.capacityNote}</p>
+
+          {/* Design */}
+          <h3 className="section-head">The stadium</h3>
+          <p className="body-text">{s.design}</p>
+          <p className="body-text">{s.status}</p>
+          {s.architect && <p className="body-text" style={{ color: '#888' }}>Architect: {s.architect}. {s.opened ? `Opened ${s.opened}.` : ''} {s.homeTo ? `Home to ${s.homeTo}.` : ''}</p>}
+
+          {/* Key fact */}
+          <div style={{ margin: '24px 0', padding: '20px 24px', background: '#fafafa', borderLeft: '3px solid #1a1a1a' }}>
+            <p style={{ fontSize: 14, lineHeight: 1.75, color: '#444', fontWeight: 300 }}>{s.keyFact}</p>
+          </div>
+
+          {/* Getting there */}
+          <h3 className="section-head">Getting to the stadium</h3>
+          {s.gettingThere.map((tip, i) => (
+            <p key={i} className="body-text">{tip}</p>
+          ))}
+
+          {/* Surroundings */}
+          <h3 className="section-head">Around the ground</h3>
+          <p className="body-text">{s.surroundings}</p>
+
+          {/* Match day tips */}
+          <h3 className="section-head">Match day tips</h3>
+          {s.matchDayTips.map((tip, i) => (
+            <p key={i} className="body-text">{tip}</p>
+          ))}
+        </>
+      ) : (
+        <p className="body-text">Capacity {city.stadium.capacity}. {city.stadium.detail}</p>
+      )}
+
+      {/* The plan — from city data */}
       <h3 className="section-head">The plan</h3>
       {city.matchDay.map((m, i) => (
         <p key={i} className="body-text"><strong>{m.split(' — ')[0]}</strong> — {m.split(' — ')[1]}</p>
       ))}
+
+      {/* Essentials */}
       <h3 className="section-head">What you need</h3>
-      <p className="body-text"><strong>FAN ID</strong> — mandatory. Download the YALLA app and register before you arrive. Required for stadium entry and fan zones. Free.</p>
-      <p className="body-text"><strong>Cash</strong> — carry small bills. Not every vendor takes cards. ATMs at banks and the airport.</p>
-      <p className="body-text"><strong>Offline maps</strong> — download Google Maps for {city.name} before you arrive. Save pins for your hotel, the stadium, and the train station.</p>
+      <p className="body-text"><strong>FAN ID</strong> — mandatory. Download the YALLA app and register before you arrive. Required for stadium entry, fan zones, and some transport. Free. All attendees including Moroccan citizens must have one.</p>
+      <p className="body-text"><strong>Cash</strong> — carry small bills (10, 20, 50 MAD). Not every vendor takes cards. ATMs at banks and the airport. Do not change money with people in the street.</p>
+      <p className="body-text"><strong>Offline maps</strong> — download Google Maps for {city.name} before you arrive. Save pins for: your hotel, the stadium, the train/bus station, and the airport. GPS signal inside medinas is unreliable.</p>
+      <p className="body-text"><strong>Water</strong> — bring a bottle. June/July temperatures in {city.name} can exceed 35°C. Stadium vendors sell water but queues will be long.</p>
     </div>
   );
 }
